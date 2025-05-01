@@ -1,0 +1,69 @@
+Enum user_role {
+  importer
+  admin
+}
+
+Enum declaration_status {
+  draft
+  submitted
+  paid
+}
+
+Enum payment_status {
+  pending
+  completed
+  failed
+}
+
+Table users {
+  id serial [pk]
+  email varchar(255) [not null, unique]
+  company varchar(255) [not null]
+  role user_role [not null]
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table countries {
+  id serial [pk]
+  name varchar(255) [not null]
+  iso_code char(2) [not null, unique]
+}
+
+Table product_categories {
+  id serial [pk]
+  name varchar(255) [not null]
+}
+
+Table products {
+  id serial [pk]
+  name varchar(255) [not null]
+  hs_code varchar(10)
+  category_id int [ref: > product_categories.id, not null]
+  country_id int [ref: > countries.id, not null]
+}
+
+Table tariff_rates {
+  id serial [pk]
+  country_id int [ref: > countries.id, not null]
+  category_id int [ref: > product_categories.id, not null]
+  rate_value numeric(5,2) [not null]
+  effective_from date [not null]
+}
+
+Table import_declarations {
+  id serial [pk]
+  user_id int [ref: > users.id, not null]
+  product_id int [ref: > products.id, not null]
+  quantity int [not null]
+  unit_cost numeric(12,2) [not null]
+  status declaration_status [not null]
+  declaration_date date [not null]
+}
+
+Table payments {
+  id serial [pk]
+  declaration_id int [ref: > import_declarations.id, not null]
+  amount numeric(12,2) [not null]
+  status payment_status [not null]
+  paid_at timestamp
+}
