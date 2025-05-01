@@ -54,9 +54,9 @@ A local prototype of **TradeTariffManager**—a system for calculating, tracking
 
 ## 4. Database Schema & Diagram
 
-- [**DDL (PostgreSQL)**:](./sql/sql_scheme.sql)  
-- [**DBML**:](./dbml/dbml_scheme.dbml)  
-- [**ER Diagram**:](./scheme_image.pdf)
+- [**DDL (PostgreSQL)**:](database/sql/sql_scheme.sql)  
+- [**DBML**:](database/dbml/dbml_scheme.dbml)  
+- [**ER Diagram**:](database/scheme_image.pdf)
 
 ---
 
@@ -99,7 +99,7 @@ psql -h localhost -U postgres -d mydb -f sql/queries/01_total_duties_last_month.
 
 ## 7. Indexes & Optimization
 
-[**Recommended indexes**](./sql/indexes.sql)
+[**Recommended indexes**](database/sql/indexes.sql)
 ---
 ### ▶ Applying Indexes and Measuring Query Performance
 
