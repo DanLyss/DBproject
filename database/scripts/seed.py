@@ -11,7 +11,7 @@ conn = psycopg2.connect(
     port     = os.getenv("POSTGRES_PORT"),
     dbname   = os.getenv("POSTGRES_DB"),
     user     = os.getenv("POSTGRES_USER"),
-    password = os.getenv("POSTGRES_PASSWORD"),
+    password = "1",
 )
 cur = conn.cursor()
 fake = Faker()

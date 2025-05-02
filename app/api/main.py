@@ -11,6 +11,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # or ["http://localhost:3000"]
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -21,7 +22,7 @@ def get_conn():
         port=5432,
         dbname="mydb",
         user="postgres",
-        password="PutYourPasswordHere",
+        password="1",
         row_factory=dict_row
     )
 
