@@ -1,97 +1,85 @@
 # App Directory
 
-This `app/` directory contains the backend API and frontend demo for the TradeTariffManager MVP.
-
-## Structure
-
-```
-app/
-├── api/
-│   ├── main.py          # FastAPI application
-│   └── requirements.txt # Python dependencies
-└── frontend/
-    └── index.html       # Simple HTML/JS form demo
-```
+This `app/` directory contains the **deployed** backend API and frontend demo for the **TradeTariffManager** MVP, now running on a remote server. You no longer need to self‑host locally—just point your browser at the server IP.
 
 ---
 
-## Prerequisites
+## 1. Deployment URL
 
-- Python 3.9+ installed
-- A running PostgreSQL database named `mydb` with schema and seed data loaded (see `../database/README.md`)
-- The file `database/.env` populated with:
+- **Frontend UI & Static Assets:**  
+  http://38.180.205.35:3000
 
-  ```dotenv
-  POSTGRES_HOST=localhost
-  POSTGRES_PORT=5432
-  POSTGRES_DB=mydb
-  POSTGRES_USER=postgres
-  POSTGRES_PASSWORD=YourPassword
-  ```
+- **Backend API & Docs (FastAPI):**  
+  http://38.180.205.35:8000/docs
 
 ---
 
-## 1. Run the Backend
+## 2. Endpoints
 
-1. Open a terminal and navigate to the backend folder:
+### Users
 
-   ```bash
-   cd app/api
-   ```
+- `GET /users`  
+  List all importer users: returns `[ { id, email, company } ]`.
 
-2. (Optional) Activate your virtual environment:
+- `POST /users`  
+  Create a new importer user.  
+  **Body:** `{ "email": string, "company": string }`  
+  **Returns:** `{ id, email, company }`.
 
-   ```bash
-   ../../../.venv/Scripts/Activate.ps1    # Windows PowerShell
-   ```
+### Products
 
-3. Install dependencies:
+- `GET /products`  
+  List all products: returns `[ { id, name, hs_code } ]`.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+- `POST /products`  
+  Create a new product.  
+  **Body:** `{ "name": string, "hs_code": string, "category_id": int, "country_id": int }`  
+  **Returns:** `{ id, name, hs_code }`.
 
-4. Start the FastAPI server:
+### Categories & Countries
 
-   ```bash
-   uvicorn main:app --reload
-   ```
+- `GET /categories`  
+  List all product categories: `[ { id, name } ]`.
 
-5. The API will be available at `http://localhost:8000` and the interactive docs at `http://localhost:8000/docs`.
+- `GET /countries`  
+  List all origin countries: `[ { id, name, iso_code } ]`.
 
----
+### Import Declarations
 
-## 2. Run the Frontend Demo
+- `GET /declarations`  
+  List all import declarations with duties due.
 
-1. Open a new terminal and navigate to the frontend folder:
+- `POST /declarations`  
+  Create a new import declaration.  
+  **Body:** `{ "product_id": int, "user_id": int, "quantity": int, "unit_cost": float, "declaration_date": "YYYY-MM-DD" }`  
+  **Returns:** the saved declaration with calculated `due`.
 
-   ```bash
-   cd app/frontend
-   ```
-
-2. Serve the `index.html` file. For example, using Python's built‑in server:
-
-   ```bash
-   python -m http.server 3000
-   ```
-
-3. Open your browser to `http://localhost:3000`. You will see a form to:
-   - Select an existing product ID and user ID
-   - Enter quantity, unit cost, and date
-   - Create a declaration and automatically process a payment
-
-4. After submission, the form will display the API responses for both the declaration and payment.
+- `POST /declarations/{decl_id}/pay`  
+  Pay duties for a submitted declaration.  
+  **Path Param:** `decl_id`  
+  **Returns:** `{ payment_id, declaration_id, amount, status }`.
 
 ---
 
-## 3. How It Works
+## 3. How It Works (UI)
 
-- The **backend** (`main.py`) exposes three endpoints:
-  - `GET /tariff-rate?country_id=<>&category_id=<>` — lookup current duty rate
-  - `POST /declarations` — create a new import declaration and return calculated duty
-  - `POST /payments` — record a payment and mark the declaration as paid
-
-- The **frontend** is a minimal HTML/JS form that sends requests to these endpoints.
+1. **Open** your browser to `http://38.180.205.35/`.
+2. In the **Create New User** form, enter an email & company to add an importer.
+3. In the **Create New Product** form, pick a category & country from dropdowns, enter name & HS code, then submit.
+4. In the **Create Declaration** form, select a product & user, enter quantity, cost, and date, then submit.  Duties are calculated automatically.
+5. Click **Pay** next to any `submitted` declaration to record a completed payment.
+6. All results and table updates happen in‑page—no manual refresh required.
 
 ---
+
+## 4. Architecture Notes
+
+- **Backend:** FastAPI application serving JSON endpoints and static frontend files.
+- **Frontend:** Plain HTML/JavaScript (no build step) mounted via FastAPI's `StaticFiles`.
+- **Database:** PostgreSQL on `mydb` (hosted remotely) with schema and seed data.
+- **CORS:** Configured to allow the remote frontend to call the API.
+
+---
+
+_No local setup is required—just point your browser at the server IP!_
 
