@@ -1,4 +1,4 @@
-const api = 'http://http://38.180.205.35/:8000';
+const api = 'http:/38.180.205.35/:8000';
 
 
 const pS = document.getElementById('product-select');
