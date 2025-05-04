@@ -14,10 +14,10 @@ from pathlib import Path as FSPath
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or ["http://localhost:3000"]
+    allow_origins=["http://38.180.205.35:3000"], 
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],       
+    allow_headers=["*"],       
 )
 
 def get_conn():
