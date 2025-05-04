@@ -36,9 +36,13 @@ class Product(BaseModel):
     name: str
     hs_code: str
 
-class User(BaseModel):
-    id: int
-    email: str
+class UserCreate(BaseModel):
+    email:   str
+    company: str
+
+class UserOut(BaseModel):
+    id:      int
+    email:   str
     company: str
 
 class DeclarationIn(BaseModel):
@@ -64,6 +68,26 @@ class PaymentOut(BaseModel):
     amount: float
     status: str
 
+
+class ProductCreate(BaseModel):
+    name: str
+    hs_code: str
+    category_id: int
+    country_id: int
+
+class ProductOut(BaseModel):
+    id: int
+    name: str
+    hs_code: str
+
+class CountryOut(BaseModel):
+    id: int
+    name: str
+    iso_code: str
+
+class CategoryOut(BaseModel):
+    id: int
+    name: str
 # --- Endpoints ---
 @app.get("/products", response_model=List[Product])
 def list_products():
@@ -71,11 +95,44 @@ def list_products():
         cur.execute("SELECT id, name, hs_code FROM products ORDER BY id")
         return cur.fetchall()
 
-@app.get("/users", response_model=List[User])
+@app.get("/countries", response_model=List[CountryOut])
+def list_countries():
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SELECT id, name, iso_code FROM countries ORDER BY name")
+        return cur.fetchall()
+
+@app.get("/categories", response_model=List[CategoryOut])
+def list_categories():
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SELECT id, name FROM product_categories ORDER BY name")
+        return cur.fetchall()
+
+@app.get("/users", response_model=List[UserOut])
 def list_users():
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute("SELECT id, email, company FROM users WHERE role='importer' ORDER BY id")
         return cur.fetchall()
+
+
+@app.post("/users", response_model=UserOut)
+def create_user(user: UserCreate):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO users (email, company, role)
+            VALUES (%s, %s, 'importer')
+            RETURNING id, email, company
+            """,
+            (user.email, user.company)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(500, "Failed to insert user")
+        conn.commit()
+    # row is a dict_row with keys id, email, company
+    return row
+
+
 
 @app.post("/declarations", response_model=DeclarationOut)
 def create_declaration(data: DeclarationIn):
@@ -125,6 +182,7 @@ def create_declaration(data: DeclarationIn):
         "status": "submitted",
         "due": due
     }
+
 
 @app.get("/declarations", response_model=List[DeclarationOut])
 def list_declarations():
@@ -211,3 +269,20 @@ def pay_declaration(decl_id: int = Path(..., title="Declaration ID")):
         conn.commit()
 
     return {"payment_id": pay_id, "declaration_id": decl_id, "amount": amount, "status": "completed"}
+
+@app.post("/products", response_model=ProductOut)
+def create_product(prod: ProductCreate):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO products (name, hs_code, category_id, country_id)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, name, hs_code
+            """,
+            (prod.name, prod.hs_code, prod.category_id, prod.country_id)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(500, "Failed to create product")
+        conn.commit()
+    return row

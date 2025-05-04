@@ -1,77 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TradeTariffManager</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <title>TradeTariffManager</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body>
-  <h1>Create Declaration</h1>
-  <form id="declaration-form">
+
+<h1>Create New User</h1>
+<form id="user-form">
+    <label>Email:
+        <input type="email" id="user-email" required>
+    </label><br><br>
+    <label>Company:
+        <input type="text" id="user-company" required>
+    </label><br><br>
+    <button type="submit">Create User</button>
+</form>
+<pre id="user-result"></pre>
+
+<hr>
+<h1>Create New Product</h1>
+<form id="product-form">
+    <label>Name:
+        <input type="text" id="product-name" required>
+    </label><br><br>
+    <label>HS Code:
+        <input type="text" id="product-hs-code" required>
+    </label><br><br>
+    <label>Category:
+        <select id="product-category-id"></select>
+    </label><br><br>
+    <label>Country:
+        <select id="product-country-id"></select>
+    </label><br><br>
+    <button type="submit">Create Product</button>
+</form>
+<pre id="product-result"></pre>
+
+<h1>Create Declaration</h1>
+<form id="declaration-form">
     <label>Product:
-      <select id="product-select"></select>
+        <select id="product-select"></select>
     </label><br><br>
     <label>User:
-      <select id="user-select"></select>
+        <select id="user-select"></select>
     </label><br><br>
     <label>Qty:
-      <input type="number" id="quantity" min="1" value="1" required>
+        <input type="number" id="quantity" min="1" value="1" required>
     </label><br><br>
     <label>Unit Cost:
-      <input type="number" id="unitCost" step="0.01" value="0.00" required>
+        <input type="number" id="unitCost" step="0.01" value="0.00" required>
     </label><br><br>
     <label>Date:
-      <input type="date" id="declarationDate" required>
+        <input type="date" id="declarationDate" required>
     </label><br><br>
     <button type="submit">Create Declaration</button>
-  </form>
-  <pre id="result"></pre>
-  <hr>
-  <h2>All Declarations</h2>
-  <table border="1" id="declarations-table">
-    <thead><tr>
-      <th>ID</th><th>Prod</th><th>User</th><th>Qty</th><th>Cost</th>
-      <th>Due</th><th>Date</th><th>Status</th><th>Action</th>
-    </tr></thead>
+</form>
+<pre id="result"></pre>
+<hr>
+<h2>All Declarations</h2>
+<table border="1" id="declarations-table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Prod</th>
+        <th>User</th>
+        <th>Qty</th>
+        <th>Cost</th>
+        <th>Due</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
     <tbody></tbody>
-  </table>
+</table>
 
 <script>
-  const api = 'http://38.180.205.35:8000';
+    const api = 'http://38.180.205.35:8000';
 
-  // grab DOM elements **first**
-  const pS = document.getElementById('product-select');
-  const uS = document.getElementById('user-select');
-  const qty = document.getElementById('quantity');
-  const cS = document.getElementById('unitCost');
-  const d  = document.getElementById('declarationDate');
-  const resultPre = document.getElementById('result');
 
-  async function loadOptions(){
-    try {
-      const [prods, users] = await Promise.all([
-        fetch(`${api}/products`).then(r=>r.json()),
-        fetch(`${api}/users`).then(r=>r.json())
-      ]);
-      prods.forEach(p => {
-        pS.append(new Option(`${p.name} (HS ${p.hs_code})`, p.id));
-      });
-      users.forEach(u => {
-        uS.append(new Option(`${u.email}`, u.id));
-      });
-    } catch(err) {
-      console.error('Failed to load options', err);
+    const pS = document.getElementById('product-select');
+    const uS = document.getElementById('user-select');
+    const qty = document.getElementById('quantity');
+    const cS = document.getElementById('unitCost');
+    const d = document.getElementById('declarationDate');
+    const resultPre = document.getElementById('result');
+    const pf = document.getElementById('product-form');
+    const pn = document.getElementById('product-name');
+    const ph = document.getElementById('product-hs-code');
+    const pci = document.getElementById('product-category-id');
+    const pco = document.getElementById('product-country-id');
+    const pres = document.getElementById('product-result');
+    const payload = {
+        name: pn.value.trim(),
+        hs_code: ph.value.trim(),
+        category_id: Number(document.getElementById('product-category-id').value),
+        country_id: Number(document.getElementById('product-country-id').value)
+    };
+
+
+    async function loadOptions() {
+        try {
+            const [prods, users, cats, cts] = await Promise.all([
+                fetch(`${api}/products`).then(r => r.json()),
+                fetch(`${api}/users`).then(r => r.json()),
+                fetch(`${api}/categories`).then(r => r.json()),
+                fetch(`${api}/countries`).then(r => r.json())
+            ]);
+
+            prods.forEach(p => pS.append(new Option(p.name, p.id)));
+            users.forEach(u => uS.append(new Option(u.email, u.id)));
+
+            const catSelect = document.getElementById('product-category-id');
+            cats.forEach(c => catSelect.append(new Option(c.name, c.id)));
+
+            const countrySelect = document.getElementById('product-country-id');
+            cts.forEach(c => countrySelect.append(new Option(c.name, c.id)));
+        } catch (err) {
+            console.error('Failed to load options', err);
+        }
     }
-  }
 
-  async function loadDeclarations(){
-    try {
-      const decls = await fetch(`${api}/declarations`).then(r=>r.json());
-      const tb = document.querySelector('#declarations-table tbody');
-      tb.innerHTML = '';
-      decls.forEach(d => {
-        const tr = tb.insertRow();
-        tr.innerHTML = `
+    async function loadDeclarations() {
+        try {
+            const decls = await fetch(`${api}/declarations`).then(r => r.json());
+            const tb = document.querySelector('#declarations-table tbody');
+            tb.innerHTML = '';
+            decls.forEach(d => {
+                const tr = tb.insertRow();
+                tr.innerHTML = `
           <td>${d.id}</td>
           <td>${d.product_id}</td>
           <td>${d.user_id}</td>
@@ -81,51 +140,103 @@
           <td>${d.declaration_date}</td>
           <td>${d.status}</td>
           <td>${
-            d.status === 'submitted'
-              ? `<button onclick="pay(${d.id})">Pay</button>`
-              : ''
-          }</td>
+                    d.status === 'submitted'
+                        ? `<button onclick="pay(${d.id})">Pay</button>`
+                        : ''
+                }</td>
         `;
-      });
-    } catch(err) {
-      console.error('Failed to load declarations', err);
+            });
+        } catch (err) {
+            console.error('Failed to load declarations', err);
+        }
     }
-  }
 
-  document.getElementById('declaration-form').onsubmit = async e => {
-    e.preventDefault();
-    try {
-      const payload = {
-        product_id: +pS.value,
-        user_id:    +uS.value,
-        quantity:   +qty.value,
-        unit_cost:  +cS.value,
-        declaration_date: d.value
-      };
-      const res = await fetch(`${api}/declarations`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const body = await res.json();
-      resultPre.textContent = JSON.stringify(body, null, 2);
-      await loadDeclarations();
-    } catch(err) {
-      console.error('Create failed', err);
-    }
-  };
+    document.getElementById('declaration-form').onsubmit = async e => {
+        e.preventDefault();
+        try {
+            const payload = {
+                product_id: +pS.value,
+                user_id: +uS.value,
+                quantity: +qty.value,
+                unit_cost: +cS.value,
+                declaration_date: d.value
+            };
+            const res = await fetch(`${api}/declarations`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('declaration-result').textContent = 'Declaration successfully created!';
+            await loadDeclarations();
+        } catch (err) {
+            console.error('Create failed', err);
+        }
+    };
 
-  window.pay = async id => {
-    try {
-      await fetch(`${api}/declarations/${id}/pay`, {method:'POST'});
-      await loadDeclarations();
-    } catch(err) {
-      console.error('Pay failed', err);
-    }
-  };
+    window.pay = async id => {
+        try {
+            await fetch(`${api}/declarations/${id}/pay`, {method: 'POST'});
+            await loadDeclarations();
+        } catch (err) {
+            console.error('Pay failed', err);
+        }
+    };
 
-  // initialize
-  loadOptions().then(loadDeclarations);
+    document.getElementById('user-form').onsubmit = async e => {
+        e.preventDefault();
+        try {
+            const payload = {
+                email: document.getElementById('user-email').value,
+                company: document.getElementById('user-company').value
+            };
+            const res = await fetch(`${api}/users`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('user-result').textContent = 'User successfully created!';
+        } catch (err) {
+            console.error('User creation failed', err);
+        }
+    };
+
+
+    pf.onsubmit = async e => {
+        e.preventDefault();
+
+        const payload = {
+            name: pn.value.trim(),
+            hs_code: ph.value.trim(),
+            category_id: Number(pci.value),
+            country_id: Number(pco.value)
+        };
+        if (!payload.name || !payload.hs_code ||
+            !Number.isInteger(payload.category_id) ||
+            !Number.isInteger(payload.country_id)) {
+            alert("All fields are required and IDs must be integers");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${api}/products`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const text = await res.text();
+            if (!res.ok) {
+                console.error("Product creation failed:", res.status, text);
+                return;
+            }
+            document.getElementById('product-result').textContent = 'Product successfully created!';
+        } catch (err) {
+            console.error("Fetch error:", err);
+        }
+    };
+
+    // initialize
+    loadOptions().then(loadDeclarations);
 </script>
+
 </body>
 </html>
