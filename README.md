@@ -14,9 +14,8 @@ Follow instructions in [`database/README.md`](./database/README.md) to:
 
 ---
 
-### 2. Backend (API)
+### 2. API
 
-1. **Navigate** into the API folder:
+Follow instructions in [`app/README.md`](./app/README.md) to:
 
-   ```bash
-   cd app/api
+- get access to front and backend of database
