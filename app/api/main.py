@@ -1,11 +1,15 @@
 import os
 from fastapi import FastAPI, HTTPException, Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from psycopg import connect
 from psycopg.rows import dict_row
 from typing import List
 from datetime import date
+from pathlib import Path as FSPath
+
 
 app = FastAPI()
 app.add_middleware(
@@ -26,9 +30,15 @@ def get_conn():
         row_factory=dict_row
     )
 
-@app.get("/")
-def health():
-    return {"status": "OK"}
+FRONTEND_DIR = FSPath(__file__).parent.parent / "frontend"
+app.mount(
+    "/static",
+    StaticFiles(directory=str(FRONTEND_DIR / "static")),
+    name="static",
+)
+@app.get("/", include_in_schema=False)
+async def serve_spa_index():
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 # --- Models ---
 class Product(BaseModel):
