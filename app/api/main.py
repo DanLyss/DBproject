@@ -36,8 +36,10 @@ app.mount(
     StaticFiles(directory=str(FRONTEND_DIR / "static")),
     name="static",
 )
+
 @app.get("/", include_in_schema=False)
 async def serve_spa_index():
+    # Return frontend/index.html for the root URL
     return FileResponse(FRONTEND_DIR / "index.html")
 
 # --- Models ---
